@@ -4,11 +4,15 @@ database.py — Cấu hình kết nối MySQL với SQLAlchemy
 from sqlalchemy import create_engine, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+from urllib.parse import quote_plus
 from config import settings
+
+# URL-encode password để xử lý ký tự đặc biệt như @, #, &, ...
+_password = quote_plus(settings.DB_PASSWORD)
 
 # Connection URL cho PyMySQL
 DATABASE_URL = (
-    f"mysql+pymysql://{settings.DB_USER}:{settings.DB_PASSWORD}"
+    f"mysql+pymysql://{settings.DB_USER}:{_password}"
     f"@{settings.DB_HOST}:{settings.DB_PORT}/{settings.DB_NAME}"
     f"?charset=utf8mb4"
 )
