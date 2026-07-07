@@ -19,6 +19,7 @@ class FCTInsertRequest(BaseModel):
     speed:      Optional[str]  = Field(None, description="Tốc độ RPM", example="270")
     error_code: Optional[str]  = Field(None, description="OK hoặc NG_xx", example="OK")
     test_date:  Optional[datetime] = Field(None, description="Thời điểm test, nếu None sẽ dùng server time")
+    po_num:     Optional[str]  = Field(None, description="Production Order Number", example="PO-2024-001")
 
 
 class FCTBatchInsertRequest(BaseModel):
@@ -57,6 +58,7 @@ class FCTRecord(BaseModel):
     speed:      Optional[str]
     error_code: Optional[str]
     test_date:  Optional[datetime]
+    po_num:     Optional[str]
 
     class Config:
         from_attributes = True

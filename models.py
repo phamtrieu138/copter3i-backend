@@ -20,3 +20,4 @@ class FCTData(Base):
     Speed     = Column(String(20),  nullable=True,  comment="Tốc độ quạt (RPM)")
     ErrorCode = Column(String(50),  nullable=True,  comment="Mã lỗi: OK hoặc NG_xx")
     TestDate  = Column(DateTime,    nullable=True,  server_default=func.now(), comment="Thời điểm kiểm tra")
+    PO_Num    = Column(String(100), nullable=True,  comment="Production Order Number")

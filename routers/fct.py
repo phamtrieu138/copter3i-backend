@@ -48,6 +48,7 @@ def insert_fct_batch(payload: FCTBatchInsertRequest, db: Session = Depends(get_d
                 Speed     = item.speed,
                 ErrorCode = item.error_code,
                 TestDate  = item.test_date or datetime.now(),
+                PO_Num    = item.po_num,
             )
             db.add(record)
             db.flush()  # Lấy ID ngay, chưa commit
@@ -98,6 +99,7 @@ def insert_fct_single(item: FCTInsertRequest, db: Session = Depends(get_db)):
             Speed     = item.speed,
             ErrorCode = item.error_code,
             TestDate  = item.test_date or datetime.now(),
+            PO_Num    = item.po_num,
         )
         db.add(record)
         db.commit()
@@ -119,10 +121,12 @@ def get_records(
     limit:      int            = Query(100, ge=1, le=1000, description="Số records tối đa"),
     seri_no:    Optional[str]  = Query(None, description="Lọc theo serial number"),
     error_code: Optional[str]  = Query(None, description="Lọc theo mã lỗi (OK / NG_xx)"),
+    po_num:     Optional[str]  = Query(None, description="Lọc theo Production Order Number"),
     db: Session = Depends(get_db)
 ):
     """
     Lấy danh sách records FCT (mới nhất trước).
+    Hỗ trợ filter: seri_no, error_code, po_num.
     """
     query = db.query(FCTData).order_by(desc(FCTData.TestDate))
 
@@ -130,6 +134,8 @@ def get_records(
         query = query.filter(FCTData.SeriNo.like(f"%{seri_no}%"))
     if error_code:
         query = query.filter(FCTData.ErrorCode == error_code)
+    if po_num:
+        query = query.filter(FCTData.PO_Num.like(f"%{po_num}%"))
 
     records = query.limit(limit).all()
 
@@ -142,6 +148,7 @@ def get_records(
             speed      = r.Speed,
             error_code = r.ErrorCode,
             test_date  = r.TestDate,
+            po_num     = r.PO_Num,
         )
         for r in records
     ]
