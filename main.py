@@ -8,11 +8,15 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
+import os
 
 from config import settings
 from database import Base, engine, test_db_connection
 from routers import fct
 from schemas import HealthResponse
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from backup import perform_backup
 
 # ─── Logging setup ────────────────────────────────────────────────────────────
 logging.basicConfig(
@@ -24,6 +28,8 @@ logger = logging.getLogger("copter3i")
 
 
 # ─── App lifecycle ────────────────────────────────────────────────────────────
+scheduler = AsyncIOScheduler()
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Chạy khi startup: tạo bảng nếu chưa có, kiểm tra DB."""
@@ -42,8 +48,14 @@ async def lifespan(app: FastAPI):
     else:
         logger.warning("Database connection: FAILED — API will start but DB calls will fail")
 
+    # Setup automatic daily backup
+    scheduler.add_job(perform_backup, 'cron', hour=2, minute=0) # Backup at 02:00 AM daily
+    scheduler.start()
+    logger.info("Backup scheduler started: daily at 02:00 AM")
+
     yield  # App đang chạy
 
+    scheduler.shutdown()
     logger.info("=== Copter3i Backend Shutting Down ===")
 
 
@@ -68,6 +80,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+os.makedirs("updates", exist_ok=True)
+app.mount("/updates", StaticFiles(directory="updates"), name="updates")
 
 
 # ─── Global exception handler ─────────────────────────────────────────────────
